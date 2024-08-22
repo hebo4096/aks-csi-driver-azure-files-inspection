@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    pv.kubernetes.io/provisioned-by: file.csi.azure.com
+  name: {{ .Values.csi.pvName }}
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: azurefile-csi
+  csi:
+    driver: file.csi.azure.com
+    volumeHandle: {{ printf "%s#%s#%s" .Values.csi.azureResourceGroupName .Values.csi.azureStorageAccountName .Values.csi.azureFileShareName }}
+    volumeAttributes:
+      resourceGroup: {{ required "You must specify resourceGroup" .Values.csi.azureResourceGroupName }}
+      shareName: {{ required "You must specify azureFileShareName" .Values.csi.azureFileShareName }}
+    nodeStageSecretRef:
+      name: {{ .Values.csi.secretName }}
+      namespace: {{ .Values.namespace }}
+  mountOptions:
+    - dir_mode=0777
+    - file_mode=0777
+    - uid=0
+    - gid=0
+    - cache=strict
+    - mfsymlinks
+    - nosharesock
+    - nobrl
+parameters:
+  skuName: Premium_LRS
